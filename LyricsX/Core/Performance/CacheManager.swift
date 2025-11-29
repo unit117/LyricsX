@@ -278,7 +278,8 @@ extension CacheManager {
     public static func lyricsKey(title: String, artist: String) -> String {
         let normalizedTitle = title.lowercased().trimmingCharacters(in: .whitespaces)
         let normalizedArtist = artist.lowercased().trimmingCharacters(in: .whitespaces)
-        return "lyrics:\(normalizedArtist):\(normalizedTitle)".hash.description
+        // Use the full normalized string as key to avoid hash collisions
+        return "lyrics:\(normalizedArtist):\(normalizedTitle)"
     }
     
     /// Generates a cache key for search results.
@@ -290,9 +291,9 @@ extension CacheManager {
     public static func searchKey(query: String, source: String? = nil) -> String {
         let normalizedQuery = query.lowercased().trimmingCharacters(in: .whitespaces)
         if let source = source {
-            return "search:\(source):\(normalizedQuery)".hash.description
+            return "search:\(source):\(normalizedQuery)"
         }
-        return "search:\(normalizedQuery)".hash.description
+        return "search:\(normalizedQuery)"
     }
 }
 

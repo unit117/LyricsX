@@ -153,7 +153,7 @@ public class WidgetDataWriter {
         defaults?.set(Date(), forKey: WidgetConstants.lastUpdateKey)
         
         // Request widget refresh
-        WidgetCenter.shared.reloadTimelines(ofKind: "com.ddddxxx.LyricsX.Widget")
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.widgetKind)
     }
     
     /// Clears all widget data (e.g., when stopping playback).
@@ -166,7 +166,7 @@ public class WidgetDataWriter {
         defaults?.set(Date(), forKey: WidgetConstants.lastUpdateKey)
         
         // Request widget refresh
-        WidgetCenter.shared.reloadTimelines(ofKind: "com.ddddxxx.LyricsX.Widget")
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.widgetKind)
     }
     
     /// Updates the playback state without changing lyrics.
@@ -177,6 +177,6 @@ public class WidgetDataWriter {
         defaults?.set(Date(), forKey: WidgetConstants.lastUpdateKey)
         
         // Request widget refresh
-        WidgetCenter.shared.reloadTimelines(ofKind: "com.ddddxxx.LyricsX.Widget")
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.widgetKind)
     }
 }

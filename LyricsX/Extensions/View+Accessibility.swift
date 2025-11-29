@@ -189,15 +189,24 @@ extension View {
     ///   - label: The slider label.
     ///   - value: The current value.
     ///   - unit: The unit of measurement.
+    ///   - decimalPlaces: Number of decimal places to show (default: 0 for integers).
     /// - Returns: A view with accessibility modifiers applied.
     public func sliderAccessibility(
         label: String,
         value: Double,
-        unit: String
+        unit: String,
+        decimalPlaces: Int = 0
     ) -> some View {
-        self
+        let formattedValue: String
+        if decimalPlaces > 0 {
+            formattedValue = String(format: "%.\(decimalPlaces)f", value)
+        } else {
+            formattedValue = String(format: "%.0f", value)
+        }
+        
+        return self
             .accessibilityLabel(label)
-            .accessibilityValue("\(Int(value)) \(unit)")
+            .accessibilityValue("\(formattedValue) \(unit)")
             .accessibilityAdjustableAction { direction in
                 // Note: Actual adjustment is handled by the slider itself
                 // This is for VoiceOver gesture support

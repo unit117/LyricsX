@@ -21,7 +21,7 @@ import SwiftUI
 struct LyricsWidget: Widget {
     
     /// The widget identifier.
-    let kind: String = "com.ddddxxx.LyricsX.Widget"
+    let kind: String = WidgetConstants.widgetKind
     
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: LyricsTimelineProvider()) { entry in
@@ -118,6 +118,9 @@ struct LyricsEntry: TimelineEntry {
 
 /// Constants for App Group data sharing.
 enum WidgetConstants {
+    
+    /// The widget kind identifier.
+    static let widgetKind = "com.ddddxxx.LyricsX.Widget"
     
     /// The App Group identifier for sharing data between the app and widget.
     static let appGroupIdentifier = "group.com.ddddxxx.LyricsX"
