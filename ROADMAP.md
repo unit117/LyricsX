@@ -19,8 +19,8 @@
 
 ### Phase 2: UI Layer Redesign (Week 3-5)
 - [x] Design SwiftUI component library
-- [ ] Migrate preferences panel to SwiftUI
-- [ ] Modernize desktop lyrics overlay view
+- [x] Migrate preferences panel to SwiftUI
+- [x] Modernize desktop lyrics overlay view
 - [x] Create consistent design system and theming
 
 ### Phase 3: Backend Integration Layer (Week 6-7)

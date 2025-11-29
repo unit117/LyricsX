@@ -17,12 +17,14 @@ This component library provides a consistent, reusable set of UI components foll
 ```
 LyricsX/SwiftUI/
 ├── DesignSystem/
-│   └── DesignSystem.swift      # Colors, typography, spacing, animations
+│   └── DesignSystem.swift          # Colors, typography, spacing, animations
 ├── Components/
-│   └── LyricsXComponents.swift # Reusable UI components
-└── Views/
-    ├── PreferencesView.swift   # SwiftUI preferences panel
-    └── LyricsDisplayView.swift # Lyrics display components
+│   └── LyricsXComponents.swift     # Reusable UI components
+├── Views/
+│   ├── PreferencesView.swift       # SwiftUI preferences panel
+│   ├── LyricsDisplayView.swift     # Lyrics display components
+│   └── DesktopLyricsOverlay.swift  # Desktop overlay implementation
+└── SwiftUIHosting.swift            # AppKit integration bridges
 ```
 
 ## Design System
@@ -233,7 +235,45 @@ MyView()
 
 ## Integration with AppKit
 
-The SwiftUI views can be hosted in existing AppKit windows:
+The SwiftUI views can be hosted in existing AppKit windows using the `SwiftUIHosting.swift` bridges:
+
+### Opening SwiftUI Preferences
+
+```swift
+// On macOS 13+
+SwiftUIPreferencesWindowController.showPreferences()
+
+// Or use the extension method that auto-selects based on OS version
+appDelegate.openPreferences()
+```
+
+### Using the Desktop Lyrics Overlay
+
+```swift
+// Show the SwiftUI desktop lyrics overlay
+if #available(macOS 12.0, *) {
+    let controller = SwiftUIDesktopLyricsController.shared
+    controller.show()
+    controller.updateLyrics(line1: "Hello", line2: "World", progress: 0.5)
+}
+```
+
+### Wrapping KaraokeLyricsView for SwiftUI
+
+```swift
+// Use the existing AppKit view in SwiftUI
+KaraokeLyricsViewRepresentable(
+    line1: "Current lyrics",
+    line2: "Next line",
+    font: .systemFont(ofSize: 28, weight: .semibold),
+    textColor: .white,
+    progressColor: NSColor(red: 0.2, green: 1.0, blue: 0.87, alpha: 1.0)
+)
+```
+
+### Legacy AppKit Integration
+
+The SwiftUI views can also be hosted in existing AppKit windows directly:
 
 ```swift
 import SwiftUI
