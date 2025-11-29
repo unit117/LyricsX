@@ -47,9 +47,6 @@ class AppController: NSObject {
     /// Legacy Combine cancellable for search operations
     var searchCanceller: Cancellable?
     
-    /// Modern Task-based search operation
-    private var searchTask: Task<Void, Never>?
-    
     private var cancelBag = Set<AnyCancellable>()
     
     /// Task for observing app termination
@@ -130,8 +127,6 @@ class AppController: NSObject {
     
     /// Cancels all active tasks.
     private func cancelAllTasks() {
-        searchTask?.cancel()
-        searchTask = nil
         searchCanceller?.cancel()
         appTerminationTask?.cancel()
         appTerminationTask = nil
@@ -204,7 +199,6 @@ class AppController: NSObject {
         
         // Cancel any ongoing search operations
         searchCanceller?.cancel()
-        searchTask?.cancel()
         
         guard let track = selectedPlayer.currentTrack else {
             return
