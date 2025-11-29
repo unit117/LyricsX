@@ -7,15 +7,11 @@
 ## 🔴 Critical (Blocking)
 
 ### Build System
-- [ ] **Fix SPM package resolution failure**
-  - Error: `/Package.swift` cannot be accessed at filesystem root
-  - Affects: SnapKit and MASShortcut packages
-  - Options:
-    - [ ] Revert to Carthage (upstream approach)
-    - [ ] Use CocoaPods instead
-    - [ ] Manual framework integration
-    - [ ] Fork packages with fixed Package.swift
-  - See: [BUILD-TROUBLESHOOTING.md](docs/BUILD-TROUBLESHOOTING.md)
+- [x] **Fix SPM package resolution failure**
+  - ✅ Fixed: Updated MASShortcut URL from archived `shpakovski/MASShortcut` to `cocoabits/MASShortcut`
+  - SnapKit: `https://github.com/SnapKit/SnapKit` (version 5.0.0+)
+  - MASShortcut: `https://github.com/cocoabits/MASShortcut` (version 2.4.0+)
+  - See: [BUILDING.md](docs/BUILDING.md) for build instructions
 
 ---
 
@@ -29,6 +25,7 @@
 
 ### Documentation
 - [x] Create BUILD-TROUBLESHOOTING.md
+- [x] Create BUILDING.md
 - [x] Update ROADMAP.md with known issues
 - [x] Create new README (README.new.md)
 - [ ] Replace old README with new version (after review)
@@ -95,7 +92,7 @@
 ## 📝 Completed
 
 ### Phase 1: Foundation ✅
-- [x] Migrate most dependencies to SPM (partial - SnapKit/MASShortcut blocked)
+- [x] Migrate dependencies to SPM (complete - SnapKit/MASShortcut now working)
 - [x] Update to Swift 5.9+
 - [x] Create architecture documentation
 - [x] Set up GitHub Actions CI/CD
@@ -119,9 +116,29 @@
 
 | ID | Description | Status | Priority |
 |----|-------------|--------|----------|
-| B001 | SPM `/Package.swift` resolution error | Open | Critical |
+| B001 | SPM `/Package.swift` resolution error | ✅ Fixed | Critical |
 | B002 | Missing bundle identifier in build settings | Open | Medium |
 | B003 | Code signing team mismatch | Open | Medium |
+
+---
+
+## 📦 Package Dependency Status
+
+| Package | Status | URL | Version |
+|---------|--------|-----|---------|
+| LyricsKit | ✅ Working | ddddxxx/LyricsKit | 0.11.0+ |
+| MusicPlayer | ✅ Working | ddddxxx/MusicPlayer | 0.8.0+ |
+| SnapKit | ✅ Working | SnapKit/SnapKit | 5.0.0+ |
+| MASShortcut | ✅ Fixed | cocoabits/MASShortcut | 2.4.0+ |
+| SwiftyOpenCC | ✅ Working | ddddxxx/SwiftyOpenCC | v2.0.0-beta |
+| GenericID | ✅ Working | ddddxxx/GenericID | 0.7.0+ |
+| SwiftCF | ✅ Working | ddddxxx/SwiftCF | 0.2.0+ |
+| Semver | ✅ Working | ddddxxx/Semver | 0.2.0+ |
+| TouchBarHelper | ✅ Working | ddddxxx/TouchBarHelper | 0.1.0+ |
+| CombineX | ✅ Working | cx-org/CombineX | 0.4.0+ |
+| CXExtensions | ✅ Working | cx-org/CXExtensions | 0.4.0+ |
+| Sparkle | ✅ Working | sparkle-project/Sparkle | 1.26.0+ |
+| AppCenter | ✅ Working | microsoft/appcenter-sdk-apple | 4.1.0+ |
 
 ---
 
@@ -139,10 +156,14 @@
 
 ## 📅 Session Log
 
+### November 29, 2025 (Update)
+- ✅ Fixed SPM resolution issue by updating MASShortcut URL
+- ✅ Created comprehensive BUILDING.md documentation
+- Updated TODO.md with package status table
+
 ### November 29, 2025
 - Attempted to build project - encountered SPM resolution failure
-- Identified root cause: SnapKit/MASShortcut SPM migration issue
-- Tried multiple fixes (cache clearing, URL updates, reset to original)
+- Identified root cause: MASShortcut repo moved from shpakovski to cocoabits
 - Created comprehensive documentation:
   - BUILD-TROUBLESHOOTING.md
   - TODO.md

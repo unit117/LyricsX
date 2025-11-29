@@ -13,7 +13,9 @@
 
 ### Phase 1: Foundation Modernization (Week 1-2)
 - [x] Migrate dependencies from Carthage to Swift Package Manager
-  - ⚠️ **Partial** - SnapKit/MASShortcut SPM migration has issues (see [BUILD-TROUBLESHOOTING.md](docs/BUILD-TROUBLESHOOTING.md))
+  - ✅ **Complete** - All packages now resolving correctly
+  - SnapKit: `https://github.com/SnapKit/SnapKit` (v5.0.0+)
+  - MASShortcut: `https://github.com/cocoabits/MASShortcut` (v2.4.0+)
 - [x] Update to Swift 5.9+ with modern concurrency
 - [x] Create architecture documentation for existing backend logic
 - [x] Set up GitHub Actions CI/CD pipeline
@@ -68,26 +70,15 @@ These contain critical, battle-tested logic and should be wrapped, not replaced:
 └─────────────────────────────────────────────────────┘
 ```
 
-## ⚠️ Known Issues
+## ✅ Resolved Issues
 
-### Critical: SPM Package Resolution Failure
+### SPM Package Resolution (Fixed)
 
-**Status:** Build currently blocked due to Swift Package Manager dependency resolution failure.
+**Status:** ✅ Resolved
 
-**Error:**
-```
-the package manifest at '/Package.swift' cannot be accessed
-(/Package.swift doesn't exist in file system)
-```
+**Solution:** Updated MASShortcut repository URL from archived `shpakovski/MASShortcut` to active `cocoabits/MASShortcut`.
 
-**Root Cause:** Commit `97cade4` migrated SnapKit and MASShortcut from Carthage to SPM, but the packages fail to resolve. The upstream project uses Carthage frameworks which work correctly.
-
-**Workarounds being investigated:**
-1. Revert to Carthage for SnapKit/MASShortcut
-2. Manual framework integration
-3. Fork packages with corrected Package.swift files
-
-See [BUILD-TROUBLESHOOTING.md](docs/BUILD-TROUBLESHOOTING.md) for detailed analysis and attempted solutions.
+**Build Instructions:** See [docs/BUILDING.md](docs/BUILDING.md) for complete build instructions.
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
