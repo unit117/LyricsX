@@ -1,1 +1,18 @@
 Product
+
+# Xcode
+build/
+*.xcuserdata
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Carthage (legacy - no longer used)
+Carthage/
+
+# macOS
+.DS_Store
+*.dSYM
