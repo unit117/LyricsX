@@ -34,25 +34,88 @@ class MenuBarLyricsController {
         }
     }
     
+    // MARK: - Observation Storage
+    
+    /// Cancellable storage for Combine subscriptions (used for bridging with legacy @Published)
     private var cancelBag = Set<AnyCancellable>()
+    
+    /// Task for observing workspace notifications
+    private var workspaceNotificationTask: Task<Void, Never>?
+    
+    /// Task for observing user defaults changes
+    private var defaultsObservationTask: Task<Void, Never>?
+    
+    /// Observation token for defaults KVO (used until full async migration)
+    private var defaultsObservation: DefaultsObservation?
+    
+    // MARK: - Initialization
     
     private init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        setupObservations()
+    }
+    
+    deinit {
+        cancelAllObservations()
+    }
+    
+    // MARK: - Setup
+    
+    private func setupObservations() {
+        // Subscribe to lyrics display changes using Combine (bridging with AppController's @Published)
+        // This will be migrated when AppController moves to @Observable
         AppController.shared.$currentLyrics
             .combineLatest(AppController.shared.$currentLineIndex)
             .receive(on: DispatchQueue.lyricsDisplay.cx)
             .invoke(MenuBarLyricsController.handleLyricsDisplay, weaklyOn: self)
             .store(in: &cancelBag)
-        workspaceNC.cx
-            .publisher(for: NSWorkspace.didActivateApplicationNotification)
-            .signal()
-            .invoke(MenuBarLyricsController.updateStatusItem, weaklyOn: self)
-            .store(in: &cancelBag)
-        defaults.publisher(for: [.menuBarLyricsEnabled, .combinedMenubarLyrics])
-            .prepend()
-            .invoke(MenuBarLyricsController.updateStatusItem, weaklyOn: self)
-            .store(in: &cancelBag)
+        
+        // Observe workspace notifications using async Task
+        setupWorkspaceNotificationObservation()
+        
+        // Observe defaults changes using KVO observation
+        setupDefaultsObservation()
     }
+    
+    /// Sets up observation for workspace application activation notifications.
+    private func setupWorkspaceNotificationObservation() {
+        workspaceNotificationTask = Task { [weak self] in
+            let notifications = NotificationCenter.default.notifications(
+                named: NSWorkspace.didActivateApplicationNotification,
+                object: nil
+            )
+            for await _ in notifications {
+                guard !Task.isCancelled else { break }
+                await MainActor.run {
+                    self?.updateStatusItem()
+                }
+            }
+        }
+    }
+    
+    /// Sets up observation for user defaults changes.
+    private func setupDefaultsObservation() {
+        // Use defaults observation for menu bar and combined lyrics settings
+        defaultsObservation = defaults.observe(keys: [.menuBarLyricsEnabled, .combinedMenubarLyrics]) { [weak self] in
+            DispatchQueue.main.async {
+                self?.updateStatusItem()
+            }
+        }
+        // Initial update
+        updateStatusItem()
+    }
+    
+    /// Cancels all active observations.
+    private func cancelAllObservations() {
+        workspaceNotificationTask?.cancel()
+        workspaceNotificationTask = nil
+        defaultsObservationTask?.cancel()
+        defaultsObservationTask = nil
+        defaultsObservation = nil
+        cancelBag.removeAll()
+    }
+    
+    // MARK: - Lyrics Display Handler
     
     private func handleLyricsDisplay(event: (lyrics: Lyrics?, index: Int?)) {
         guard !defaults[.disableLyricsWhenPaused] || selectedPlayer.playbackState.isPlaying,
@@ -70,6 +133,8 @@ class MenuBarLyricsController {
         }
         screenLyrics = newScreenLyrics
     }
+    
+    // MARK: - Status Item Updates
     
     @objc private func updateStatusItem() {
         guard defaults[.menuBarLyricsEnabled], !screenLyrics.isEmpty else {

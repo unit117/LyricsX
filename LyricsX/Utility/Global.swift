@@ -12,7 +12,17 @@ import CXShim
 import GenericID
 import MusicPlayer
 
+// MARK: - Legacy CXShim Type Aliases
+// These type aliases are deprecated and will be removed in a future version.
+// For macOS 14+, use @Observable macro instead of ObservableObject/@Published.
+// For macOS 12-13, use Combine's native ObservableObject.
+
+/// Deprecated: Use @Observable macro (macOS 14+) or native Combine.ObservableObject
+@available(*, deprecated, message: "Use @Observable macro for macOS 14+ or native Combine.ObservableObject")
 typealias ObservableObject = CombineX.ObservableObject
+
+/// Deprecated: Use @Observable macro (macOS 14+) or native Combine.Published
+@available(*, deprecated, message: "Use @Observable macro for macOS 14+ or native Combine.Published")
 typealias Published = CombineX.Published
 
 let fontNameFallbackCountMax = 1

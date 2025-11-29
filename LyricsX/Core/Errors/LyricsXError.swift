@@ -47,6 +47,9 @@ public enum LyricsXError: LocalizedError, Equatable, Sendable {
     /// The operation timed out.
     case timeout
     
+    /// The operation was cancelled.
+    case cancelled
+    
     /// An unknown error occurred.
     case unknown(message: String)
     
@@ -105,6 +108,12 @@ public enum LyricsXError: LocalizedError, Equatable, Sendable {
                 comment: "Error message when request times out"
             )
             
+        case .cancelled:
+            return NSLocalizedString(
+                "Operation Cancelled",
+                comment: "Error message when operation is cancelled"
+            )
+            
         case .unknown(let message):
             return String(
                 format: NSLocalizedString(
@@ -160,6 +169,9 @@ public enum LyricsXError: LocalizedError, Equatable, Sendable {
                 comment: "Recovery suggestion for timeout errors"
             )
             
+        case .cancelled:
+            return nil
+            
         case .unknown:
             return NSLocalizedString(
                 "Please try again. If the problem persists, restart the application.",
@@ -184,6 +196,8 @@ public enum LyricsXError: LocalizedError, Equatable, Sendable {
             return "The provided input did not meet the requirements."
         case .timeout:
             return "The operation exceeded the maximum allowed time."
+        case .cancelled:
+            return "The operation was cancelled by the user or system."
         case .unknown:
             return "An unexpected condition occurred."
         }
@@ -202,10 +216,21 @@ public extension LyricsXError {
             return lyricsXError
         }
         
+        // Check for cancellation
+        if error is CancellationError {
+            return .cancelled
+        }
+        
         let nsError = error as NSError
         
         // Check for common error patterns
         if nsError.domain == NSURLErrorDomain {
+            if nsError.code == NSURLErrorCancelled {
+                return .cancelled
+            }
+            if nsError.code == NSURLErrorTimedOut {
+                return .timeout
+            }
             return .networkError(message: error.localizedDescription)
         }
         
