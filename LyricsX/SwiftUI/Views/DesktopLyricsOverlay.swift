@@ -93,6 +93,11 @@ public struct DesktopLyricsOverlay: View {
         .padding(.vertical, viewModel.fontSize / 3)
         .background(viewModel.backgroundColor)
         .cornerRadius(viewModel.fontSize / 2)
+        .desktopLyricsAccessibility(
+            line1: viewModel.line1,
+            line2: viewModel.line2,
+            isVisible: viewModel.isVisible
+        )
     }
     
     private func dragGesture(in geometry: GeometryProxy) -> some Gesture {

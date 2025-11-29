@@ -237,6 +237,9 @@ struct ShortcutRow: View {
                 .background(LyricsXColors.backgroundSecondary)
                 .cornerRadius(LyricsXRadius.small)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), keyboard shortcut")
+        .accessibilityValue(shortcut)
     }
 }
 
