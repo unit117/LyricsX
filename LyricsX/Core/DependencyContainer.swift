@@ -22,18 +22,19 @@ import Foundation
 /// let lyricsService = container.lyricsService
 ///
 /// // For testing, replace services with mocks:
-/// let mockService = MockLyricsService()
-/// container.register(lyricsService: mockService)
+/// await container.register(lyricsService: mockService)
 /// ```
-@MainActor
-public final class DependencyContainer: Sendable {
+public final class DependencyContainer: @unchecked Sendable {
     
     // MARK: - Shared Instance
     
     /// The shared singleton instance of the dependency container.
     public static let shared = DependencyContainer()
     
-    // MARK: - Service Storage
+    // MARK: - Private Storage
+    
+    /// Lock for thread-safe access to services.
+    private let lock = NSLock()
     
     /// Storage for the lyrics service instance.
     private var _lyricsService: (any LyricsServiceProtocol)?
@@ -47,6 +48,9 @@ public final class DependencyContainer: Sendable {
     ///
     /// Returns the registered service or creates a default implementation.
     public var lyricsService: any LyricsServiceProtocol {
+        lock.lock()
+        defer { lock.unlock() }
+        
         if let service = _lyricsService {
             return service
         }
@@ -59,6 +63,9 @@ public final class DependencyContainer: Sendable {
     ///
     /// Returns the registered service or creates a default implementation.
     public var playerService: any MusicPlayerServiceProtocol {
+        lock.lock()
+        defer { lock.unlock() }
+        
         if let service = _playerService {
             return service
         }
@@ -77,12 +84,16 @@ public final class DependencyContainer: Sendable {
     /// Registers a custom lyrics service implementation.
     /// - Parameter service: The lyrics service to register.
     public func register(lyricsService: any LyricsServiceProtocol) {
+        lock.lock()
+        defer { lock.unlock() }
         _lyricsService = lyricsService
     }
     
     /// Registers a custom music player service implementation.
     /// - Parameter service: The music player service to register.
     public func register(playerService: any MusicPlayerServiceProtocol) {
+        lock.lock()
+        defer { lock.unlock() }
         _playerService = playerService
     }
     
@@ -90,6 +101,8 @@ public final class DependencyContainer: Sendable {
     ///
     /// This is primarily useful for testing to ensure a clean state between tests.
     public func reset() {
+        lock.lock()
+        defer { lock.unlock() }
         _lyricsService = nil
         _playerService = nil
     }
@@ -105,7 +118,6 @@ extension DependencyContainer {
     ///   - lyricsService: Optional custom lyrics service.
     ///   - playerService: Optional custom player service.
     /// - Returns: A configured dependency container.
-    @MainActor
     public static func forTesting(
         lyricsService: (any LyricsServiceProtocol)? = nil,
         playerService: (any MusicPlayerServiceProtocol)? = nil

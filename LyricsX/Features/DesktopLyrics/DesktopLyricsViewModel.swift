@@ -335,11 +335,7 @@ public final class LegacyDesktopLyricsViewModel: ObservableObject {
         trackObservationTask = Task { [weak self] in
             guard let self = self else { return }
             for await track in self.playerService.observeTrackChanges() {
-                await MainActor.run {
-                    Task {
-                        await self.handleTrackChange(track)
-                    }
-                }
+                await self.handleTrackChange(track)
             }
         }
         
@@ -419,9 +415,6 @@ public final class LegacyDesktopLyricsViewModel: ObservableObject {
     @MainActor
     private func updateDisplay(at position: TimeInterval) {
         guard isPlaying, let lyrics = lyrics else {
-            if !isPlaying {
-                return
-            }
             currentLine = ""
             nextLine = ""
             progress = 0

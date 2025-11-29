@@ -74,7 +74,8 @@ public final class LyricsServiceImpl: LyricsServiceProtocol, @unchecked Sendable
             var results: [Lyrics] = []
             var hasCompleted = false
             
-            let cancellable = lyricsManager.lyricsPublisher(request: request)
+            var cancellable: AnyCancellable?
+            cancellable = lyricsManager.lyricsPublisher(request: request)
                 .timeout(.seconds(15), scheduler: DispatchQueue.global().cx)
                 .sink(
                     receiveCompletion: { completion in
@@ -101,8 +102,9 @@ public final class LyricsServiceImpl: LyricsServiceProtocol, @unchecked Sendable
                     }
                 )
             
-            // Retain the cancellable for the duration of the async operation
-            withExtendedLifetime(cancellable) {}
+            continuation.onTermination = { _ in
+                cancellable?.cancel()
+            }
         }
     }
     

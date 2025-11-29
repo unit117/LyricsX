@@ -118,6 +118,9 @@ public final class MusicPlayerServiceImpl: MusicPlayerServiceProtocol, @unchecke
                 return
             }
             
+            // Emit current position immediately before setting up timer
+            continuation.yield(self.player.playbackTime)
+            
             // Use a timer to periodically emit the current position
             let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
                 guard let self = self else { return }
@@ -127,9 +130,6 @@ public final class MusicPlayerServiceImpl: MusicPlayerServiceProtocol, @unchecke
             
             // Add to run loop
             RunLoop.main.add(timer, forMode: .common)
-            
-            // Emit current position immediately
-            continuation.yield(self.player.playbackTime)
             
             continuation.onTermination = { _ in
                 timer.invalidate()
