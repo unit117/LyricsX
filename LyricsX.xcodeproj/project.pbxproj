@@ -1485,7 +1485,7 @@
 		};
 		BBSPM002000000000000001 /* XCRemoteSwiftPackageReference "MASShortcut" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/shpakovski/MASShortcut";
+			repositoryURL = "https://github.com/cocoabits/MASShortcut";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.4.0;
