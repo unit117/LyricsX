@@ -36,6 +36,9 @@ public struct LyricsXToggle: View {
         }
         .toggleStyle(.switch)
         .tint(LyricsXColors.accent)
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn ? NSLocalizedString("On", comment: "Toggle on") : NSLocalizedString("Off", comment: "Toggle off"))
+        .accessibilityHint(subtitle ?? NSLocalizedString("Double-tap to toggle", comment: "Toggle hint"))
     }
 }
 
@@ -54,6 +57,7 @@ public struct LyricsXSectionHeader: View {
             if let icon = icon {
                 Image(systemName: icon)
                     .foregroundColor(LyricsXColors.accent)
+                    .accessibilityHidden(true)
             }
             
             Text(title)
@@ -63,6 +67,8 @@ public struct LyricsXSectionHeader: View {
             Spacer()
         }
         .padding(.bottom, LyricsXSpacing.xs)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityLabel(title)
     }
 }
 
@@ -130,14 +136,19 @@ public struct LyricsXSliderRow: View {
                     .font(LyricsXTypography.body)
                     .foregroundColor(LyricsXColors.textSecondary)
                     .frame(minWidth: 40, alignment: .trailing)
+                    .accessibilityHidden(true)
             }
             
             if let step = step {
                 Slider(value: $value, in: range, step: step)
                     .tint(LyricsXColors.accent)
+                    .accessibilityLabel(title)
+                    .accessibilityValue(valueFormatter(value))
             } else {
                 Slider(value: $value, in: range)
                     .tint(LyricsXColors.accent)
+                    .accessibilityLabel(title)
+                    .accessibilityValue(valueFormatter(value))
             }
         }
     }
@@ -162,6 +173,7 @@ public struct LyricsXColorPickerRow: View {
             
             ColorPicker("", selection: $color, supportsOpacity: true)
                 .labelsHidden()
+                .accessibilityLabel(title)
         }
     }
 }
@@ -183,17 +195,21 @@ public struct LyricsXButtonRow: View {
             HStack {
                 if let icon = icon {
                     Image(systemName: icon)
+                        .accessibilityHidden(true)
                 }
                 Text(title)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(LyricsXColors.textSecondary)
+                    .accessibilityHidden(true)
             }
             .font(LyricsXTypography.body)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
