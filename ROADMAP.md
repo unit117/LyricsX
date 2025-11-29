@@ -12,16 +12,16 @@
 ## Timeline
 
 ### Phase 1: Foundation Modernization (Week 1-2)
-- [ ] Migrate dependencies from Carthage to Swift Package Manager
-- [ ] Update to Swift 5.9+ with modern concurrency
-- [ ] Create architecture documentation for existing backend logic
-- [ ] Set up GitHub Actions CI/CD pipeline
+- [x] Migrate dependencies from Carthage to Swift Package Manager
+- [x] Update to Swift 5.9+ with modern concurrency
+- [x] Create architecture documentation for existing backend logic
+- [x] Set up GitHub Actions CI/CD pipeline
 
 ### Phase 2: UI Layer Redesign (Week 3-5)
-- [ ] Design SwiftUI component library
-- [ ] Migrate preferences panel to SwiftUI
-- [ ] Modernize desktop lyrics overlay view
-- [ ] Create consistent design system and theming
+- [x] Design SwiftUI component library
+- [x] Migrate preferences panel to SwiftUI
+- [x] Modernize desktop lyrics overlay view
+- [x] Create consistent design system and theming
 
 ### Phase 3: Backend Integration Layer (Week 6-7)
 - [ ] Create service protocols for LyricsKit abstraction
