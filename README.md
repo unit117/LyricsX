@@ -28,7 +28,8 @@ Download from [releases](https://github.com/ddddxxx/LyricsX/releases).
 
 ### Requirements
 
-- macOS 10.11+
+- macOS 12.0+ (Monterey or later)
+- Swift 5.9+
 
 ## Features
 
