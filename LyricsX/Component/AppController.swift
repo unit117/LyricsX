@@ -19,7 +19,15 @@ class AppController: NSObject {
     
     static let shared = AppController()
     
+    // MARK: - Properties
+    
+    /// The lyrics provider group for searching lyrics from multiple sources.
     let lyricsManager = LyricsProviders.Group()
+    
+    /// The lyrics service protocol implementation for async operations.
+    private lazy var lyricsService: any LyricsServiceProtocol = {
+        DependencyContainer.shared.lyricsService
+    }()
     
     @Published var currentLyrics: Lyrics? {
         willSet {
@@ -35,9 +43,17 @@ class AppController: NSObject {
     @Published var currentLineIndex: Int?
     
     var searchRequest: LyricsSearchRequest?
+    
+    /// Legacy Combine cancellable for search operations
     var searchCanceller: Cancellable?
     
+    /// Modern Task-based search operation
+    private var searchTask: Task<Void, Never>?
+    
     private var cancelBag = Set<AnyCancellable>()
+    
+    /// Task for observing app termination
+    private var appTerminationTask: Task<Void, Never>?
     
     @objc dynamic var lyricsOffset: Int {
         get {
@@ -50,28 +66,79 @@ class AppController: NSObject {
         }
     }
     
+    // MARK: - Initialization
+    
     private override init() {
         super.init()
+        setupObservations()
+        currentTrackChanged()
+    }
+    
+    deinit {
+        cancelAllTasks()
+    }
+    
+    // MARK: - Setup
+    
+    private func setupObservations() {
+        // Subscribe to track changes
         selectedPlayer.currentTrackWillChange
             .signal()
             .receive(on: DispatchQueue.lyricsDisplay.cx)
             .invoke(AppController.currentTrackChanged, weaklyOn: self)
             .store(in: &cancelBag)
+        
+        // Subscribe to playback state changes
         selectedPlayer.playbackStateWillChange
             .signal()
             .receive(on: DispatchQueue.lyricsDisplay.cx)
             .invoke(AppController.scheduleCurrentLineCheck, weaklyOn: self)
             .store(in: &cancelBag)
         
-        workspaceNC.cx.publisher(for: NSWorkspace.didTerminateApplicationNotification, object: nil)
-            .sink { n in
-                let bundleID = (n.userInfo![NSWorkspace.applicationUserInfoKey] as! NSRunningApplication).bundleIdentifier
-                if defaults[.launchAndQuitWithPlayer], (selectedPlayer.designatedPlayer as? MusicPlayers.Scriptable)?.playerBundleID == bundleID {
-                    NSApplication.shared.terminate(nil)
-                }
-            }.store(in: &cancelBag)
-        currentTrackChanged()
+        // Setup app termination observation using async Task
+        setupAppTerminationObservation()
     }
+    
+    /// Sets up observation for application termination to quit with player if enabled.
+    private func setupAppTerminationObservation() {
+        appTerminationTask = Task { [weak self] in
+            let notifications = NotificationCenter.default.notifications(
+                named: NSWorkspace.didTerminateApplicationNotification,
+                object: nil
+            )
+            for await notification in notifications {
+                guard !Task.isCancelled else { break }
+                self?.handleAppTermination(notification)
+            }
+        }
+    }
+    
+    private func handleAppTermination(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let app = userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              let bundleID = app.bundleIdentifier else {
+            return
+        }
+        
+        if defaults[.launchAndQuitWithPlayer],
+           (selectedPlayer.designatedPlayer as? MusicPlayers.Scriptable)?.playerBundleID == bundleID {
+            DispatchQueue.main.async {
+                NSApplication.shared.terminate(nil)
+            }
+        }
+    }
+    
+    /// Cancels all active tasks.
+    private func cancelAllTasks() {
+        searchTask?.cancel()
+        searchTask = nil
+        searchCanceller?.cancel()
+        appTerminationTask?.cancel()
+        appTerminationTask = nil
+        cancelBag.removeAll()
+    }
+    
+    // MARK: - Line Check Scheduling
     
     var currentLineCheckSchedule: Cancellable?
     func scheduleCurrentLineCheck() {
@@ -93,6 +160,8 @@ class AppController: NSObject {
             }
         }
     }
+    
+    // MARK: - iTunes Integration
     
     func writeToiTunes(overwrite: Bool) {
         guard selectedPlayer.name == .appleMusic,
@@ -124,13 +193,19 @@ class AppController: NSObject {
         sbTrack.setValue(replaced, forKey: "lyrics")
     }
     
+    // MARK: - Track Change Handling
+    
     func currentTrackChanged() {
         if currentLyrics?.metadata.needsPersist == true {
             currentLyrics?.persist()
         }
         currentLyrics = nil
         currentLineIndex = nil
+        
+        // Cancel any ongoing search operations
         searchCanceller?.cancel()
+        searchTask?.cancel()
+        
         guard let track = selectedPlayer.currentTrack else {
             return
         }
@@ -214,7 +289,30 @@ class AppController: NSObject {
             })
     }
     
-    // MARK: LyricsSourceDelegate
+    // MARK: - Async Lyrics Search (Modern API)
+    
+    /// Searches for lyrics asynchronously using the modern async/await API.
+    /// - Parameters:
+    ///   - title: The song title.
+    ///   - artist: The artist name.
+    ///   - duration: The track duration.
+    /// - Returns: The best matching lyrics, or nil if none found.
+    func searchLyricsAsync(title: String, artist: String, duration: TimeInterval) async -> Lyrics? {
+        do {
+            let results = try await lyricsService.searchLyrics(
+                title: title,
+                artist: artist,
+                duration: duration,
+                limit: 5
+            )
+            return results.first
+        } catch {
+            log("Async lyrics search failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    // MARK: - LyricsSourceDelegate
     
     func lyricsReceived(lyrics: Lyrics) {
         guard let req = searchRequest,
@@ -236,24 +334,16 @@ class AppController: NSObject {
     }
 }
 
+// MARK: - Lyrics Import
+
 extension AppController {
     
     func importLyrics(_ lyricsString: String) throws {
         guard let lrc = Lyrics(lyricsString) else {
-            let errorInfo = [
-                NSLocalizedDescriptionKey: "Invalid lyric file",
-                NSLocalizedRecoverySuggestionErrorKey: "Please try another one."
-            ]
-            let error = NSError(domain: lyricsXErrorDomain, code: 0, userInfo: errorInfo)
-            throw error
+            throw LyricsXError.parsingError(reason: "Invalid lyric file format")
         }
         guard let track = selectedPlayer.currentTrack else {
-            let errorInfo = [
-                NSLocalizedDescriptionKey: "No music playing",
-                NSLocalizedRecoverySuggestionErrorKey: "Play a music and try again."
-            ]
-            let error = NSError(domain: lyricsXErrorDomain, code: 0, userInfo: errorInfo)
-            throw error
+            throw LyricsXError.playerNotAvailable
         }
         lrc.metadata.title = track.title
         lrc.metadata.artist = track.artist
@@ -266,6 +356,34 @@ extension AppController {
         }
         if let index = defaults[.noSearchingAlbumNames].firstIndex(of: track.album ?? "") {
             defaults[.noSearchingAlbumNames].remove(at: index)
+        }
+    }
+    
+    /// Imports lyrics asynchronously using the modern async/await API.
+    /// - Parameter lyricsString: The lyrics content string to import.
+    /// - Throws: `LyricsXError` if the import fails.
+    func importLyricsAsync(_ lyricsString: String) async throws {
+        let lyrics = try lyricsService.parseLRCX(lyricsString)
+        
+        guard let track = selectedPlayer.currentTrack else {
+            throw LyricsXError.playerNotAvailable
+        }
+        
+        var importedLyrics = lyrics
+        importedLyrics.metadata.title = track.title
+        importedLyrics.metadata.artist = track.artist
+        importedLyrics.filtrate()
+        importedLyrics.recognizeLanguage()
+        importedLyrics.metadata.needsPersist = true
+        
+        await MainActor.run {
+            self.currentLyrics = importedLyrics
+            if let index = defaults[.noSearchingTrackIds].firstIndex(of: track.id) {
+                defaults[.noSearchingTrackIds].remove(at: index)
+            }
+            if let index = defaults[.noSearchingAlbumNames].firstIndex(of: track.album ?? "") {
+                defaults[.noSearchingAlbumNames].remove(at: index)
+            }
         }
     }
 }
